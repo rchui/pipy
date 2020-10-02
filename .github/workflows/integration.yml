@@ -1,0 +1,29 @@
+name: Integration Testing
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+    env:
+      PY_COLORS: 1
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+            python-version: ${{ matrix.python-version }}
+            architecture: x64
+      - name: Setup Environment
+        run: |
+          pip install tox
+      - name: Static Analysis - isort
+        run: |
+          tox -e isort
+      - name: Static Analysis - mypy
+        run: |
+          tox -e mypy
+      - name: Static Analysis - black
+        run: |
+          tox -e black
