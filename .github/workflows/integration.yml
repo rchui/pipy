@@ -11,13 +11,21 @@ jobs:
       PY_COLORS: 1
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v2
         with:
             python-version: ${{ matrix.python-version }}
             architecture: x64
       - name: Setup Environment
         run: |
-          pip install tox
+          pip install --upgrade setuptools tox twine wheel
       - name: Static Analysis
         run: |
           tox -e isort,mypy,black,flake8
+      - name: Build Distributions
+        run: |
+          python setup.py sdist bdist build bdist_wheel
+      - name: Upload Distributions
+        run: |
+          twine upload --username __token__ --password ${{ secrets.TEST_PYPI_API_TOKEN }} --repository testpypi dist/*
