@@ -8,6 +8,7 @@ import hashin
 import toml
 
 from pipy import environment as docker
+from pipy.utils import sh
 
 
 def _get_hashes(version: str, packages: List[Tuple[str, str]]) -> Dict[str, Any]:
@@ -67,6 +68,27 @@ def _get_packages(name: str, version: str, dependencies: List[str], verbose: boo
     return packages
 
 
+def _get_includes(includes: List[str], environments: List[Dict[str, Any]]) -> List[str]:
+    """Get all packages from all included environments.
+
+    Args:
+        includes (List[str]): Environments to also include.
+        environments (List[Dict[str, Any]]): Other environments to check.
+
+    Returns:
+        List[str]: Packages to incldue from other environments.
+    """
+
+    packages: List[str] = []
+
+    for include in includes:
+        for other_environment in environments:
+            if other_environment["name"] == include:
+                packages = packages + other_environment["packages"]
+
+    return packages
+
+
 def lock(name: str, verbose: bool = False) -> None:
     """Lock all environments and versions for the given project.
 
@@ -100,7 +122,9 @@ def lock(name: str, verbose: bool = False) -> None:
         for environment in environments:
             print(f"\n  Locking {environment['name']} environment:")
 
-            dependencies = environment["packages"]
+            dependencies = sorted(
+                set(environment["packages"] + _get_includes(environment.get("includes", []), environments))
+            )
 
             requirements: List[Dict[str, Any]] = []
             for dependency in dependencies:
@@ -112,3 +136,39 @@ def lock(name: str, verbose: bool = False) -> None:
 
     with open("pipy.lock.toml", "w+") as lock_file:
         lock_file.write(toml.dumps(lock_configuration))
+
+
+def install(name: str, environment: str, version: str, verbose: bool) -> None:
+    """Install a locked environment.
+
+    Args:
+        name (str): Name of the project being installed.
+        environment (str): Name of the locked environment to install.
+        version (str): Python version to lock environment with.
+        verbose (bool): Verbose output.
+    """
+
+    print(f"Installing {name}'s Python {version} {environment} environment.")
+
+    with open("pipy.lock.toml", "r") as lock_file:
+        lock_configuration = toml.loads(lock_file.read())
+
+    environment_configuration = lock_configuration.get(environment)
+    if environment_configuration is None:
+        print(
+            f"{environment} is not a locked environment. Add to [[tool.pipy.environments]] and run: pipy lock",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    version_configuration = environment_configuration.get(version)
+    if version_configuration is None:
+        print(
+            f"Python {version} is not a locked python version. Add version to [tool.pipy] and run: pipy lock",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    packages = (f"{package['name']}=={package['version']}" for package in version_configuration["packages"])
+
+    sh.run(f"python -m pip install {' '.join(packages)}", log=verbose)

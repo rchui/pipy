@@ -8,12 +8,13 @@ import toml
 from pipy import environment, packages
 from pipy.utils import cli
 
-actions = {"open": environment, "close": environment, "lock": packages}
+ACTIONS = {"open": environment, "close": environment, "lock": packages, "install": packages}
+DEFAULT_VERSION = f"{sys.version_info[0]}.{sys.version_info[1]}"
 
 
 def main() -> None:
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--verbose", action="store_true", help="Enable verbbose output.")
 
     subparsers = parser.add_subparsers()
@@ -25,6 +26,15 @@ def main() -> None:
     close_parser.add_argument("version", type=str, help="Python version of environment to close.")
 
     cli.add_action("lock", subparsers, "Lock environment packages.")
+
+    install_parser = cli.add_action("install", subparsers, "Install a locked python environment.")
+    install_parser.add_argument("environment", type=str, help="Locked pipy environment to install.")
+    install_parser.add_argument(
+        "--version",
+        type=str,
+        default=DEFAULT_VERSION,
+        help=f"Python version to install with. Defaults to '{DEFAULT_VERSION}'.",
+    )
 
     with open("pyproject.toml", "r") as pyproject:
         project_configs = toml.loads(pyproject.read())
@@ -42,11 +52,11 @@ def main() -> None:
         parser.print_help()
         sys.exit(1)
 
-    if action not in actions:
+    if action not in ACTIONS:
         parser.print_help()
         sys.exit(1)
 
-    getattr(actions[action], action)(**args, **configs)
+    getattr(ACTIONS[action], action)(**args, **configs)
 
 
 if __name__ == "__main__":

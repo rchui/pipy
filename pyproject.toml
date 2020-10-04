@@ -10,12 +10,13 @@ line-length = 120
 
 [tool.pipy]
 name = "pipy"
-versions = ["3.6", "3.7", "3.8"]
+versions = ["3.6", "3.7"]
 
 [[tool.pipy.environments]]
 name = "dev"
-packages = ["flake8", "black"]
+packages = ["flake8"]
 
 [[tool.pipy.environments]]
 name = "prd"
+includes = ['dev']
 packages = ["black"]
