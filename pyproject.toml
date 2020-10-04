@@ -7,3 +7,15 @@ build-backend = "setuptools.build_meta"
 
 [tool.black]
 line-length = 120
+
+[tool.pipy]
+name = "pipy"
+versions = ["3.6", "3.7", "3.8"]
+
+[[tool.pipy.environments]]
+name = "dev"
+packages = ["flake8", "black"]
+
+[[tool.pipy.environments]]
+name = "prd"
+packages = ["black"]

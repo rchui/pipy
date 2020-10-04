@@ -13,3 +13,6 @@
 # python
 *.egg-info
 __pycache__
+
+# pipy
+.pipy

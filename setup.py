@@ -48,13 +48,14 @@ def get_version() -> Any:
 name = "pipy"
 description = "Python library for consistent environments."
 long_description = description
-
+with open("requirements.txt", "r") as requirements_file:
+    requirements = [line for line in requirements_file]
 
 setup(
     author="Ryan Chui",
     author_email="ryan.w.chui@gmail.com",
     description=description,
-    entry_points={},
+    entry_points={"console_scripts": ["pipy=pipy:main"]},
     license="Apache 2.0",
     long_description=long_description,
     name=name,
@@ -64,6 +65,6 @@ setup(
     include_package_data=True,
     url="https://github.com/rchui/" + name,
     version=get_version(),
-    install_requires=[],
+    install_requires=requirements,
     setup_requires=[],
 )

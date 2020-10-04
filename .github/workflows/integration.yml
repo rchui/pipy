@@ -18,12 +18,6 @@ jobs:
       - name: Setup Environment
         run: |
           pip install tox
-      - name: Static Analysis - isort
+      - name: Static Analysis
         run: |
-          tox -e isort
-      - name: Static Analysis - mypy
-        run: |
-          tox -e mypy
-      - name: Static Analysis - black
-        run: |
-          tox -e black
+          tox -e isort,mypy,black,flake8
