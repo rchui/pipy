@@ -8,7 +8,7 @@ import toml
 from pipy import environment, packages
 from pipy.utils import cli
 
-ACTIONS = {"open": environment, "close": environment, "lock": packages, "install": packages}
+ACTIONS = {"open": environment, "close": environment, "lock": packages, "install": packages, "create": packages}
 DEFAULT_VERSION = f"{sys.version_info[0]}.{sys.version_info[1]}"
 
 
@@ -20,20 +20,44 @@ def main() -> None:
     subparsers = parser.add_subparsers()
 
     open_parser = cli.add_action("open", subparsers, "Open an isolated python environment.")
-    open_parser.add_argument("version", type=str, help="Python version use in environment.")
+    open_parser.add_argument(
+        "--version",
+        type=str,
+        default=DEFAULT_VERSION,
+        help=f"Python version use in environment. Defaults to '{DEFAULT_VERSION}'.",
+    )
 
     close_parser = cli.add_action("close", subparsers, "Close and delete python environment.")
-    close_parser.add_argument("version", type=str, help="Python version of environment to close.")
+    close_parser.add_argument(
+        "--version",
+        type=str,
+        default=DEFAULT_VERSION,
+        help=f"Python version of environment to close. Defaults to '{DEFAULT_VERSION}'",
+    )
 
     cli.add_action("lock", subparsers, "Lock environment packages.")
 
     install_parser = cli.add_action("install", subparsers, "Install a locked python environment.")
-    install_parser.add_argument("environment", type=str, help="Locked pipy environment to install.")
+    install_parser.add_argument(
+        "environment",
+        type=str,
+        default=DEFAULT_VERSION,
+        help=f"Locked pipy environment to install. Defaults to '{DEFAULT_VERSION}'.",
+    )
     install_parser.add_argument(
         "--version",
         type=str,
         default=DEFAULT_VERSION,
         help=f"Python version to install with. Defaults to '{DEFAULT_VERSION}'.",
+    )
+
+    create_parser = cli.add_action("create", subparsers, "Create a locked python environment.")
+    create_parser.add_argument("environment", type=str, help="Locked pipy environment to create.")
+    create_parser.add_argument(
+        "--version",
+        type=str,
+        default=DEFAULT_VERSION,
+        help=f"Python version to create with. Defaults to '{DEFAULT_VERSION}'.",
     )
 
     with open("pyproject.toml", "r") as pyproject:

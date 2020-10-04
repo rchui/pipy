@@ -18,5 +18,5 @@ packages = ["flake8"]
 
 [[tool.pipy.environments]]
 name = "prd"
-includes = ['dev']
+includes = ["dev"]
 packages = ["black"]

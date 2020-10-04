@@ -82,9 +82,18 @@ def _get_includes(includes: List[str], environments: List[Dict[str, Any]]) -> Li
     packages: List[str] = []
 
     for include in includes:
+        found = False
         for other_environment in environments:
             if other_environment["name"] == include:
                 packages = packages + other_environment["packages"]
+                found = True
+
+        if not found:
+            print(
+                f"    Error: Could not include '{include}' environment. Is it declared in [[tool.pipy.environemnts]]?",
+                file=sys.stderr,
+            )
+            sys.exit(1)
 
     return packages
 
@@ -100,10 +109,13 @@ def lock(name: str, verbose: bool = False) -> None:
         project_configs = toml.loads(pyproject.read())
 
     if "environments" not in project_configs["tool"]["pipy"]:
-        print("No environments found to lock. Add to [[tool.pipy.environments]] in pyproject.toml.", file=sys.stderr)
+        print(
+            "Error: No environments found to lock. Add one to [[tool.pipy.environments]] in pyproject.toml.",
+            file=sys.stderr,
+        )
         sys.exit(1)
     elif "versions" not in project_configs["tool"]["pipy"]:
-        print("No versions found to lock. Add to [tool.pipy] in pyproject.toml.", file=sys.stderr)
+        print("Error: No versions found to lock. Add one to [tool.pipy] in pyproject.toml.", file=sys.stderr)
         sys.exit(1)
 
     environments = project_configs["tool"]["pipy"]["environments"]
@@ -138,14 +150,14 @@ def lock(name: str, verbose: bool = False) -> None:
         lock_file.write(toml.dumps(lock_configuration))
 
 
-def install(name: str, environment: str, version: str, verbose: bool) -> None:
+def install(name: str, environment: str, version: str, verbose: bool = False) -> None:
     """Install a locked environment.
 
     Args:
         name (str): Name of the project being installed.
         environment (str): Name of the locked environment to install.
-        version (str): Python version to lock environment with.
-        verbose (bool): Verbose output.
+        version (str): Python version to install environment with.
+        verbose (bool): Verbose logging if True. Defaults to False.
     """
 
     print(f"Installing {name}'s Python {version} {environment} environment.")
@@ -156,7 +168,7 @@ def install(name: str, environment: str, version: str, verbose: bool) -> None:
     environment_configuration = lock_configuration.get(environment)
     if environment_configuration is None:
         print(
-            f"{environment} is not a locked environment. Add to [[tool.pipy.environments]] and run: pipy lock",
+            f"Error: {environment} is not a locked environment. Add it to [[tool.pipy.environments]] and relock.",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -164,7 +176,7 @@ def install(name: str, environment: str, version: str, verbose: bool) -> None:
     version_configuration = environment_configuration.get(version)
     if version_configuration is None:
         print(
-            f"Python {version} is not a locked python version. Add version to [tool.pipy] and run: pipy lock",
+            f"Error: Python {version} is not a locked python version. Add the version to [tool.pipy] and relock.",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -172,3 +184,41 @@ def install(name: str, environment: str, version: str, verbose: bool) -> None:
     packages = (f"{package['name']}=={package['version']}" for package in version_configuration["packages"])
 
     sh.run(f"python -m pip install {' '.join(packages)}", log=verbose)
+
+
+def create(name: str, environment: str, version: str, verbose: bool = False) -> None:
+    """Create a locked environment.
+
+    Args:
+        name (str): Name of the project being created.
+        environment (str): Name of the locked environment being created.
+        version (str): Python version to install environment with.
+        verbose (bool): Verbose logging if True. Defaults to False.
+    """
+
+    print(f"Creating {name}'s Python {version} {environment} environment.")
+
+    with open("pipy.lock.toml", "r") as lock_file:
+        lock_configuration = toml.loads(lock_file.read())
+
+    environment_configuration = lock_configuration.get(environment)
+    if environment_configuration is None:
+        print(
+            f"Error: {environment} is not a locked environment. Add it to [[tool.pipy.environments]] and relock.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    version_configuration = environment_configuration.get(version)
+    if version_configuration is None:
+        print(
+            f"Error: Python {version} is not a locked python version. Add the version to [tool.pipy] and relock.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    packages = (f"{package['name']}=={package['version']}" for package in version_configuration["packages"])
+
+    with docker.Manager(name, version, close=False, verbose=verbose):
+        docker._execute(name, version, f"python -m pip install {' '.join(packages)}", verbose=verbose)
+        docker._execute(name, version, "bash", verbose)
