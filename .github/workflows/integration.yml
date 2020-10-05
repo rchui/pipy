@@ -26,6 +26,3 @@ jobs:
       - name: Build Distributions
         run: |
           python setup.py sdist bdist build bdist_wheel
-      - name: Upload Distributions
-        run: |
-          twine upload --username __token__ --password ${{ secrets.TEST_PYPI_API_TOKEN }} --repository testpypi dist/*

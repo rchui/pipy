@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Tuple
 import hashin
 import toml
 
-from pipy import environment as docker
+from pipy import session
 from pipy.utils import sh
 
 
@@ -51,15 +51,15 @@ def _get_packages(name: str, version: str, dependencies: List[str], verbose: boo
             str: Locked package version
     """
 
-    with docker.Manager(name, version, close=True):
-        docker._collect(name, version, "python -m pip install --upgrade pip", verbose)
-        docker._collect(
+    with session.Manager(name, version, close=True):
+        session._collect(name, version, "python -m pip install --upgrade pip", verbose)
+        session._collect(
             name,
             version,
             f"python -m pip install --upgrade --use-feature=2020-resolver {' '.join(dependencies)}",
             verbose,
         )
-        requirements = docker._collect(name, version, "pip freeze --exclude-editable", verbose)
+        requirements = session._collect(name, version, "pip freeze --exclude-editable", verbose)
 
     packages: List[Tuple[str, str]] = []
     for requirement in requirements.splitlines():
@@ -186,17 +186,17 @@ def install(name: str, environment: str, version: str, verbose: bool = False) ->
     sh.run(f"python -m pip install {' '.join(packages)}", log=verbose)
 
 
-def create(name: str, environment: str, version: str, verbose: bool = False) -> None:
-    """Create a locked environment.
+def sync(name: str, environment: str, version: str, verbose: bool = False) -> None:
+    """Sync a locked environment.
 
     Args:
-        name (str): Name of the project being created.
-        environment (str): Name of the locked environment being created.
+        name (str): Name of the project being synced.
+        environment (str): Name of the locked environment being synced.
         version (str): Python version to install environment with.
         verbose (bool): Verbose logging if True. Defaults to False.
     """
 
-    print(f"Creating {name}'s Python {version} {environment} environment.")
+    print(f"Syncing {name}'s Python {version} {environment} environment.")
 
     with open("pipy.lock.toml", "r") as lock_file:
         lock_configuration = toml.loads(lock_file.read())
@@ -219,6 +219,6 @@ def create(name: str, environment: str, version: str, verbose: bool = False) -> 
 
     packages = (f"{package['name']}=={package['version']}" for package in version_configuration["packages"])
 
-    with docker.Manager(name, version, close=False, verbose=verbose):
-        docker._execute(name, version, f"python -m pip install {' '.join(packages)}", verbose=verbose)
-        docker._execute(name, version, "bash", verbose)
+    session.close(name, version, verbose=verbose)
+    with session.Manager(name, version, close=False, verbose=verbose):
+        session._execute(name, version, f"python -m pip install {' '.join(packages)}", verbose=verbose)

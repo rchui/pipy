@@ -33,7 +33,7 @@ def _get_version_from_git_tag() -> Any:
 
     version = m.group("xyz")
     if m.group("dev") or _is_dirty():
-        version += ".dev{dev}+{hash}".format(dev=m.group("dev") or 0, hash=hash(m.group("hash") or _get_hash()))
+        version += ".dev{dev}+{hash}".format(dev=m.group("dev") or 0, hash=m.group("hash") or _get_hash())
 
     return version
 

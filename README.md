@@ -30,7 +30,7 @@ pipy install dev
 Or create the locked environment into a container:
 
 ```bash
-pipy create dev
+pipy sync dev
 ```
 
 You can clean up a created environment:
