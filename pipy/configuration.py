@@ -11,11 +11,13 @@ def _validate(configs: MutableMapping[str, Any]) -> Dict[str, Any]:
         print("No pyproject.toml found. Could not identify as a python project.", file=sys.stderr)
         sys.exit(1)
 
-    return configs["tool"]["pipy"]
+    pipy_config: Dict[str, Any] = configs["tool"]["pipy"]
+    return pipy_config
 
 
 def _name(configs: Dict[str, Any]) -> str:
-    return configs["name"]
+    name: str = configs["name"]
+    return name
 
 
 def _aliases(configs: Dict[str, Any]) -> Dict[str, Any]:

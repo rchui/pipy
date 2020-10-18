@@ -1,6 +1,6 @@
 include Make.rules
 
-fmt:
+format:
 	isort .
 	black .
 
@@ -16,4 +16,4 @@ test:
 shell:
 	$(ACTIVATE) /bin/zsh
 
-.PHONY: fmt test shell
+.PHONY: format test shell
