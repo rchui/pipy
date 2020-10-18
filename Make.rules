@@ -1,5 +1,4 @@
 ACTIVATE := . .venv/bin/activate &&
-
-MAKESHELL ?= $(SHELL)
+PIP := $(ACTIVATE) python -m pip
 
 export

@@ -10,13 +10,9 @@ line-length = 120
 
 [tool.pipy]
 name = "pipy"
-versions = ["3.6", "3.7"]
 
-[[tool.pipy.environments]]
-name = "dev"
-packages = ["flake8"]
-
-[[tool.pipy.environments]]
-name = "prd"
-includes = ["dev"]
-packages = ["black"]
+[[tool.pipy.aliases]]
+name = "setup"
+commands = [
+    "pip install --upgrade pip"
+]

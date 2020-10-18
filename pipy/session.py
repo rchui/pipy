@@ -3,7 +3,7 @@
 import os
 import sys
 from contextlib import ContextDecorator
-from typing import Any
+from typing import Any, Dict
 
 from typing_extensions import Literal
 
@@ -16,12 +16,13 @@ def _docker() -> None:
         sys.exit(1)
 
 
-def close(name: str, version: str, verbose: bool = False) -> None:
+def close(name: str, version: str, verbose: bool = False, **kwargs: Any) -> None:
     """Close and delete python environment.
 
     Args:
         name (str): Name of the project environment being closed.
         version (str): Version of the python environment being closed.
+        verbose (bool, optional): Print verbose output. Defaults to False.
     """
 
     _docker()
@@ -55,6 +56,7 @@ class Manager(ContextDecorator):
                         --volume {os.environ['PWD']}:/src
                         --volume /var/run/docker.sock:/var/run/docker.sock
                         --volume {cache_dir}:/root/.cache/pip
+                        --volume {os.environ['HOME']}/.bashrc:/root/.bashrc
                         python:{self.version}
                 """,
                 log=self.verbose,
@@ -77,15 +79,19 @@ def _execute(name: str, version: str, command: str, verbose: bool) -> None:
     sh.run(f"docker exec --interactive --tty pipy-{version}-{name} {command}", log=verbose)
 
 
-def open(name: str, version: str, verbose: bool = False) -> None:
+def open(name: str, version: str, aliases: Dict[str, Any], verbose: bool = False, **kwargs: Any) -> None:
     """Open an isolated python environment.
 
     Args:
         name (str): Name of the project environment is being started for.
         version (str): Python version of the environment to start.
+        aliases (Dict[str, Any]): Aliases defined for the existing project.
+        verbose (bool, optional): Print verbose output. Defaults to False.
     """
 
     _docker()
 
     with Manager(name, version, verbose=verbose):
+        for command in aliases["setup"]["commands"]:
+            _execute(name, version, command, verbose)
         _execute(name, version, "bash", verbose)

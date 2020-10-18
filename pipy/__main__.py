@@ -3,12 +3,10 @@
 import argparse
 import sys
 
-import toml
-
-from pipy import packages, session
+from pipy import configuration, session
 from pipy.utils import cli
 
-ACTIONS = {"open": session, "close": session, "lock": packages, "install": packages, "sync": packages}
+ACTIONS = {"open": session, "close": session}
 
 
 def main() -> None:
@@ -24,24 +22,7 @@ def main() -> None:
     close_parser = cli.add_action("close", subparsers, "Close and delete python environment.")
     cli.version(close_parser)
 
-    cli.add_action("lock", subparsers, "Lock environment packages.")
-
-    install_parser = cli.add_action("install", subparsers, "Install a locked python environment.")
-    cli.environment(install_parser)
-    cli.version(install_parser)
-
-    sync_parser = cli.add_action("sync", subparsers, "Sync a locked environment.")
-    cli.environment(sync_parser)
-    cli.version(sync_parser)
-
-    with open("pyproject.toml", "r") as pyproject:
-        project_configs = toml.loads(pyproject.read())
-
-    if "tool" in project_configs and "pipy" in project_configs["tool"]:
-        configs = {"name": project_configs["tool"]["pipy"]["name"]}
-    else:
-        print("No pyproject.toml found. Could not identify as a python project.", file=sys.stderr)
-        sys.exit(1)
+    configs = configuration.parse()
 
     args = vars(parser.parse_args())
 

@@ -1,16 +1,19 @@
+include Make.rules
+
 fmt:
 	isort .
 	black .
 
 develop:
 	virtualenv --clear .venv
-	. .venv/bin/activate && python -m pip install --editable .
-	. .venv/bin/activate && python -m pip install -r requirements.dev.txt
+	$(PIP) install --upgrade pip
+	$(PIP) install -r requirements.dev.txt
+	$(PIP) install --editable .
 
 test:
 	@tox
 
 shell:
-	$(ACTIVATE) $(MAKESHELL)
+	$(ACTIVATE) /bin/zsh
 
 .PHONY: fmt test shell

@@ -24,8 +24,5 @@ def environment(argparser: argparse.ArgumentParser) -> None:
 
 def version(argparser: argparse.ArgumentParser) -> None:
     argparser.add_argument(
-        "--version",
-        type=str,
-        default=DEFAULT_VERSION,
-        help=f"Python version to use. Defaults to '{DEFAULT_VERSION}'.",
+        "--version", type=str, default=DEFAULT_VERSION, help=f"Python version to use. Defaults to '{DEFAULT_VERSION}'.",
     )
