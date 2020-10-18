@@ -1,5 +1,5 @@
-# Pipy: Service Dependency Management for Python
-Pipy helps you manage the entire life cycle of your Python service. It operates across development, testing, and production to create consistent, reproducible environments not matter what stage you are at.
+# Pipy: Consistent Python Development Environments
+`Pipy` helps you manage your python development environment and is meant to serve as a replacement to `virtualenv`. Instead of virtual environments, `pipy` launches, pauses, and unpauses containers to create isolated and reproducible development environments.
 
 ## Introduction
 
@@ -9,31 +9,15 @@ Pipy helps you manage the entire life cycle of your Python service. It operates 
 pip install pipy
 ```
 
-You can create an isolated Python environment:
+## Usage
+
+To create an isolated Python environment:
 
 ```bash
 pipy open
 ```
 
-You can lock an service's dependencies:
-
-```bash
-pipy lock
-```
-
-You can install packages from a locked environment:
-
-```bash
-pipy install dev
-```
-
-Or create the locked environment into a container:
-
-```bash
-pipy sync dev
-```
-
-You can clean up a created environment:
+To clean up a created environment:
 
 ```bash
 pipy close
@@ -46,20 +30,10 @@ pipy close
 ```toml
 [tool.pipy]
 name = "pipy"
-versions = ["3.6", "3.7"]  # Supports multiple python version locking.
 
-[[tool.pipy.environments]]
-name = "dev"  # Supports arbitrary environment naming.
-packages = ["flake8"]
-
-[[tool.pipy.environments]]
-name = "prd"
-includes = ['dev']  # Also install 'dev' packages
-packages = ["black"]
+[[tool.pipy.aliases]]
+name = "setup"
+commands = []  # Shell commands to execute to setup environment.
 ```
 
-## Purpose
-
-`pipy` uses industry standard tools under the hood to create the isolated environments. Instead of virtual environments, `pipy` launches, pauses, and unpauses containers to create environments. To perform Python package dependency reoslution, it uses `pip`'s experimental 2020 dependency resolver to generate locked environments.
-
-`pipy` is meant to replace `pipenv`, `poetry`, `virtualenv`, and `pyenv` for developing and deploying containerized Python services.
+`pipy` expects a default alias `setup` to be pre-defined in order to setup the environments as they are created.
