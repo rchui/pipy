@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 
+import typer
+
+from pipy.utils.session import Docker
+
+cli = typer.Typer()
+
 
 def main() -> None:
-    pass
+    cli()
 
 
 if __name__ == "__main__":

@@ -4,11 +4,11 @@ format:
 	$(ACTIVATE) isort .
 	$(ACTIVATE) black .
 
-develop:
+env:
 	virtualenv --clear .venv
 	$(PIP) install --upgrade pip
-	$(PIP) install -r requirements.dev.txt
-	$(PIP) install --editable .
+	$(PIP) install --use-feature=2020-resolver --requirement requirements.dev.txt
+	$(PIP) install --use-feature=2020-resolver --editable .
 
 test:
 	$(ACTIVATE) tox
