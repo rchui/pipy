@@ -2,8 +2,6 @@
 
 import typer
 
-from pipy.utils.session import Docker
-
 cli = typer.Typer()
 
 
