@@ -1,8 +1,8 @@
 include Make.rules
 
 format:
-	isort .
-	black .
+	$(ACTIVATE) isort .
+	$(ACTIVATE) black .
 
 develop:
 	virtualenv --clear .venv
@@ -11,9 +11,9 @@ develop:
 	$(PIP) install --editable .
 
 test:
-	@tox
+	$(ACTIVATE) tox
 
 shell:
-	$(ACTIVATE) /bin/zsh
+	$(ACTIVATE) /bin/bash
 
 .PHONY: format test shell

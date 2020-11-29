@@ -1,3 +1,8 @@
+black
+flake8
+isort
+tox
+
 hashin
 toml
 typing_extensions
