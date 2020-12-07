@@ -1,52 +1,50 @@
 import uuid
-from contextlib import ContextDecorator
+from contextlib import AbstractContextManager
 from pathlib import Path
 from typing import Any
 
 import docker
-import typer
 
 from pipy import config
 from pipy.utils import sh
 
 
-class Docker(ContextDecorator):
-    def __init__(self, context: str = "pipy.session.docker") -> None:
-        self.name = uuid.uuid4()
+class Container(AbstractContextManager):
+    def __init__(self, *, image: str, context: str = "pipy.session.container", verbose: bool = False) -> None:
         self.client = docker.from_env()
         self.container: Any = None
         self.context = context
+        self.image = image
+        self.name = uuid.uuid4()
+        self.verbose = verbose
 
-    def __enter__(self) -> "Docker":
-        self.stop()
+    def __enter__(self) -> "Container":
         self.start()
         return self
 
     def __exit__(self, *_: Any) -> None:
         self.stop()
 
-    def start(self) -> "Docker":
+    def start(self) -> "Container":
         """Create and start a Docker container."""
-        self.container = self.client.containers.create(
-            "python:3.6",
-            name=self.name,
-            tty=True,
-            detach=True,
-            volumes={str(Path.cwd()): {"bind": config.defaults.workdir, "mode": "rw"}},
+        sh.collect(
+            f"docker run -idt --name {self.name} --rm -v {Path.cwd()}:{config.defaults.workdir}:rw {self.image}",
+            context=self.context,
+            verbose=self.verbose,
         )
-        self.container.start()
         return self
 
     def stop(self) -> None:
         """Stop and remove a Docker container."""
-        if self.container is not None:
-            self.container.remove(v=True, force=True)
+        sh.collect(f"docker stop {self.name}", context=self.context, check=False, verbose=self.verbose)
 
-    def execute(self, command: str) -> "Docker":
+    def execute(self, command: str) -> "Container":
         """Execute a command in a running Docker container."""
-        sh.log(command, context=self.context)
-        for stream in self.container.exec_run(command, stream=True, demux=False, workdir=config.defaults.workdir):
-            if stream is not None:
-                for line in stream:
-                    sh.log(line.decode().strip(), context=self.context, color=typer.colors.YELLOW)
+        if not self.verbose:
+            sh.log(command, context=self.context)
+        sh.run(
+            f"docker exec -it -w {config.defaults.workdir} {self.name} {command}",
+            context=self.context,
+            verbose=self.verbose,
+        )
         return self
